@@ -18,6 +18,12 @@ var game = new Phaser.Game(1200, 600, Phaser.AUTO, '', { preload: preload, creat
 
 function preload() {
 
+	game.load.audio('musica', 'assets/JonLajoie.mp3');
+
+	game.load.audio('coin', 'assets/coin.mp3');
+
+	game.load.audio('dead', 'assets/Explosion.wav');
+
     game.load.image('sky', 'assets/skyBG.png');
     game.load.image('ground', 'assets/platformStone.png');
     game.load.image('grassPlatform', 'assets/platform-grass.png');
@@ -27,7 +33,7 @@ function preload() {
     game.load.spritesheet('door', 'assets/portalDoor.png', 152, 140, 3);
 	
 	//The needed graphics for the bad guys and the lifebar
-	game.load.spritesheet('badguy','assets/baddie.png', 32, 32);
+	//game.load.spritesheet('badguy','assets/baddie.png', 32, 32);
 
 	game.load.spritesheet('wolverine', 'assets/enemyOne.png', 64, 66);
 
@@ -35,7 +41,25 @@ function preload() {
 
 	//game.load.spritesheet('goblin', 'assets/goblinExu.png', 58, 66);
 
-	game.load.image('life', 'assets/firstaid.png')
+	game.load.image('diamond', 'assets/diamond.png');
+
+	game.load.image('donut', 'assets/donutt.png');
+
+	game.load.image('coffee', 'assets/coffee.png');
+
+	game.load.image('life', 'assets/firstaid.png');
+
+	game.load.image('ostra', 'assets/ostra.png');
+
+	game.load.image('sorvete', 'assets/sorvete.png');
+
+	game.load.image('chifre', 'assets/chifre.png');
+
+	game.load.image('copo', 'assets/copoo.png');
+
+	game.load.image('carne', 'assets/carne.png');
+
+	game.load.image('sushi', 'assets/sushi.png');
 }
 
 var player;
@@ -44,7 +68,12 @@ var platforms;
 var cursors;
 var door;
 
+var testaDonut = false;
+var testaSorvete = false;
+var testaCopo = false;
+var testaDiamond = false;
 
+var specialItems;
 var stars;
 var lifes;
 var score = 0;
@@ -53,13 +82,22 @@ var scoreText;
 var messageText;
 
 var hitTimer=0;
-var NR_OF_STARS=1;
+var NR_OF_STARS=8;
+
+var musica;
+var coin;
+var dead;
 //var NR_OF_BAD_GUYS=3;
 
 
 function create() {
 
     game.physics.startSystem(Phaser.Physics.ARCADE);
+
+    coin = game.add.audio('coin');
+    dead = game.add.audio('dead');
+    musica = game.add.audio('musica');
+    musica.play('', 0, 1, false);
 
     //Background
     game.add.sprite(0, 0, 'sky');
@@ -124,6 +162,34 @@ function create() {
     player.animations.add('right', [5, 6, 7, 8], 10, true);
 	player.animations.add('hit', [2, 4, 5], 20, true);
 
+	//Special items
+    specialItems = game.add.group();
+
+    specialItems.enableBody = true;
+
+    var donut = specialItems.create(20, 300, 'donut');
+    donut.body.gravity.y = 150;
+    donut.body.bounce.y = 0.5;
+    donut.body.collideWorldBounds = true;
+
+    var sorvete = specialItems.create(380, 200, 'sorvete');
+    sorvete.body.gravity.y = 150;
+    sorvete.body.bounce.y = 0.5;
+    sorvete.body.collideWorldBounds = true;
+
+
+    var copo = specialItems.create(640, 100, 'copo');
+    copo.body.gravity.y = 150;
+    copo.body.bounce.y = 0.5;
+    copo.body.collideWorldBounds = true;
+
+
+    var diamond = specialItems.create(820, 300, 'diamond');
+    diamond.body.gravity.y = 150;
+    diamond.body.bounce.y = 0.5;
+    diamond.body.collideWorldBounds = true;
+
+
  
 	//Bad guys
 	bad_guys = game.add.group();
@@ -142,7 +208,7 @@ function create() {
 	bad_guy.frame = 4;
 
 
-	var bad_guy= bad_guys.create(440, 225, 'wolverine');
+	var bad_guy= bad_guys.create(400, 225, 'wolverine');
 
 	bad_guy.body.bounce.y =  0.7 + 0.2;
 	bad_guy.body.gravity.y = 300;
@@ -185,7 +251,7 @@ function create() {
     for (var i = 0; i < NR_OF_STARS; i++)
     {
         //  Create a star inside of the 'stars' group
-        var star = stars.create(100+i * (game.world.width-100)/NR_OF_STARS,  Math.random()*(game.world.height-150), 'star');
+        var star = stars.create(100+i * (game.world.width-100)/NR_OF_STARS,  Math.random()*(game.world.height-300), 'star');
 
         //  Let gravity do its thing
         star.body.gravity.y = 300;
@@ -218,17 +284,24 @@ function create() {
 
 function update() {
 
+	if(!musica.isPlaying){
+		musica.play('', 0, 1, false);
+	}
+
     //  Collide the player and the stars with the platforms
     game.physics.arcade.collide(player, platforms);
     game.physics.arcade.collide(stars, platforms);
+    game.physics.arcade.collide(stars, door);
+    game.physics.arcade.collide(specialItems, platforms);
 	game.physics.arcade.collide(bad_guys, platforms);
 
 
     //  Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
-    game.physics.arcade.overlap(player, stars, collectStar, null, this);
-	game.physics.arcade.collide(player, bad_guys, hit, null, this);
 
 	game.physics.arcade.collide(player, door, passDoor, null, this);
+    game.physics.arcade.overlap(player, stars, collectStar, null, this);
+	game.physics.arcade.collide(player, bad_guys, hit, null, this);
+	game.physics.arcade.collide(player, specialItems, collectSpecial, null, this);
    
     
 	
@@ -289,7 +362,7 @@ function update() {
 			} else if (bad_guy.body.touching.down){
 
 				bad_guy.body.velocity.x=0;
-				bad_guy.body.velocity.y=-speed*3;
+				bad_guy.body.velocity.y=-speed*2;
 				bad_guy.animations.stop();
 			}
 
@@ -301,6 +374,7 @@ function update() {
 
 function collectStar (player, star) {
     
+    coin.play('', 0, 0.3, false);
     // Removes the star from the screen
     star.kill();
 
@@ -309,35 +383,87 @@ function collectStar (player, star) {
     scoreText.text = 'Score: ' + score; 
 	
 	//for (var i=0;i<bad_guys.countLiving();i++){	}
+
+	var i = 0;
 	
-	
-	if (score==NR_OF_STARS){
+	if(testaDonut){
+		i += 10;
+	}
+
+	if(testaSorvete){
+		i += 10;
+	} 
+
+	if(testaCopo){
+		i += 10;
+	}
+
+	if(testaDiamond){
+		i += 10;
+	}
+
+	if (score===(NR_OF_STARS + i)){
 		door.animations.stop();
 		door.frame = 2;
 		//game.paused=true;
 		//messageText = 
 		game.add.text(510, 300, 'The door is OPENED!', { fontSize: '32px', fill: '#fff' });
 
+		for(var x=0; x<=3; x++){
+			bad_guys.children[x].kill();
+		}
+
 	}
 }
 
 
+function collectSpecial(player, specialItem){
+
+	coin.play('', 0, 0.3, false);
+
+	var nome = specialItem.key;
+	if(nome === "donut"){
+		testaDonut = true;
+	} else if (nome === "sorvete"){
+		testaSorvete = true;
+	} else if(nome === "copo"){
+		testaCopo = true;
+	} else if (nome === "diamond") {
+		testaDiamond = true;
+	};
+
+	specialItem.kill();
+
+	score+= 10;
+
+	scoreText.text = 'Score: ' + score; 
+
+}
+
 
 function hit (player, bad_guy) {
-    
-    //if (hitTimer<=0 && bad_guy.emotionAgent.getRelation('player').like<0){
 
-	if (hitTimer<=0){
+	dead.play('', 0, 0.3, false);
+	player.animations.play('hit');
+
+	if (player.body.touching.down && bad_guy.body.touching.up){
+
+        // Mata inimigo
+        bad_guy.kill();
+
+        //if (hitTimer<=0 && bad_guy.emotionAgent.getRelation('player').like<0){
+	} else if (hitTimer<=0){
 		//  Add and update lives
-		
 		lifes.getFirstAlive().kill();
 		scoreText.text = 'Score: ' + score;
 		player.body.velocity.y = -150;
+		player.animations.play('hit');
+
 		if (player.body.x < bad_guy.body.x)
 			player.body.velocity.x = -200;
 		else
 			player.body.velocity.x = 200;
-			player.animations.play('hit');
+			//player.animations.play('hit');
 			hitTimer=50;
 		
 		
@@ -353,15 +479,18 @@ function hit (player, bad_guy) {
 
 function passDoor (player, door) {
 
-	if (score===NR_OF_STARS){
+	if (door.frame===2){
 		score = 0;
 		//game.paused=true;
+		//location.href="fase2.html";
 		this.game.state.start(game.state.current);
 
 		/* if (lifes.countLiving()==0){
 			game.paused=true;
 			messageTect.text = 'You shall NOT PASS!';
 		}*/
+
+	} else {
 
 	}
 

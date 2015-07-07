@@ -1,0 +1,150 @@
+<!doctype html> 
+<html lang="en"> 
+<head> 
+	<meta charset="UTF-8" />
+    <title>Kill 'em All</title>
+	<script type="text/javascript" src="js/phaser.min.js"></script>
+	<style type="text/css">
+        body {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+<script type="text/javascript">
+
+var game = new Phaser.Game(1200, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+
+function preload() {
+
+	game.load.audio('musica', 'assets/JonLajoie.mp3');
+
+	game.load.audio('coin', 'assets/coin.mp3');
+
+	game.load.audio('dead', 'assets/Explosion.wav');
+
+    game.load.image('sky', 'assets/skyBG.png');
+    game.load.image('platform', 'assets/platform-grass.png');
+    game.load.image('ice-platform', 'assets/ice-platform.png');
+    game.load.spritesheet('dude', 'assets/player.png', 56, 64);
+
+	//game.load.spritesheet('goblin', 'assets/goblinExu.png', 58, 66);
+
+	game.load.image('diamond', 'assets/diamond.png');
+
+	game.load.image('donut', 'assets/donutt.png');
+
+	game.load.image('coffee', 'assets/coffee.png');
+
+	game.load.image('life', 'assets/firstaid.png');
+
+	game.load.image('ostra', 'assets/ostra.png');
+
+	game.load.image('sorvete', 'assets/sorvete.png');
+
+	game.load.image('chifre', 'assets/chifre.png');
+
+	game.load.image('copo', 'assets/copoo.png');
+
+	game.load.image('carne', 'assets/carne.png');
+
+	game.load.image('sushi', 'assets/sushi.png');
+}
+
+var player;
+var platforms;
+var cursors;
+
+var musica;
+var coin;
+var dead;
+
+
+function create() {
+
+    game.physics.startSystem(Phaser.Physics.ARCADE);
+
+    platforms = game.add.physicsGroup();
+
+    platforms.create(0, 64, 'ice-platform');
+    platforms.create(200, 180, 'platform');
+    platforms.create(400, 296, 'ice-platform');
+    platforms.create(600, 412, 'platform');
+
+    platforms.setAll('body.allowGravity', false);
+    platforms.setAll('body.immovable', true);
+    platforms.setAll('body.velocity.x', 100);
+
+    player = game.add.sprite(320, 432, 'dude');
+
+    game.physics.arcade.enable(player);
+
+    player.body.collideWorldBounds = true;
+    //player.body.setSize(20, 32, 5, 16);
+
+    player.animations.add('left', [0, 1, 2, 3], 10, true);
+    player.animations.add('turn', [4], 20, true);
+    player.animations.add('right', [5, 6, 7, 8], 10, true);
+
+    cursors = game.input.keyboard.createCursorKeys();
+
+    coin = game.add.audio('coin');
+    dead = game.add.audio('dead');
+    musica = game.add.audio('musica');
+    musica.play('', 0, 1, false);
+
+    //Background
+    game.add.sprite(0, 0, 'sky');
+
+
+ 
+	
+}
+
+function update() {
+
+	if(!musica.isPlaying){
+		musica.play('', 0, 1, false);
+	}
+
+	
+	platforms.forEach(wrapPlatform, this);
+
+    game.physics.arcade.collide(player, platforms, setFriction, null, this);
+
+    //  Do this AFTER the collide check, or we won't have blocked/touching set
+    var standing = player.body.blocked.down || player.body.touching.down;
+
+    player.body.velocity.x = 0;
+
+    if (standing && cursors.up.isDown && time.time > jumpTimer){
+        player.body.velocity.y = -500;
+        jumpTimer = time.time + 750;
+    }
+   	
+}
+
+function wrapPlatform(platform) {
+
+    if (platform.body.velocity.x < 0 && platform.x <= -160){
+        platform.x = 640;
+
+    } else if (platform.body.velocity.x > 0 && platform.x >= 640){
+        platform.x = -160;
+    }
+    
+}
+
+function setFriction(player, platform) {
+
+    if (platform.key === 'ice-platform'){
+        player.body.x -= platform.body.x - platform.body.prev.x;
+    }
+
+}
+
+
+</script>
+</body>
+</html>
